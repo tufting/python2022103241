@@ -4,59 +4,69 @@ import random
 """
 
 
-# 随机数据结构生成类
-class DataGenerator:
-    @staticmethod
-    def generate(**kwargs):
-        result = []
-        for data_type, data_size in kwargs.items():
+class DataSampler:
+    def __init__(self):
+        pass
+
+    def dataSampling(self, **kwargs):
+        res = []
+        for data_type, data_len in kwargs.items():
             if data_type == "int":
-                result.extend(random.sample(range(1, 100), data_size))
+                res.extend(random.sample(range(1, 100), data_len))
             elif data_type == "float":
-                result.extend([random.uniform(0, 1) for _ in range(data_size)])
+                res.extend([round(random.uniform(0, 100), 3) for _ in range(data_len)])
             elif data_type == "str":
-                result.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=5)) for _ in range(data_size)])
-        return result
+                res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(5, 10))) for _ in
+                            range(data_len)])
+            else:
+                print(f'unsupported data type: {data_type}')
+        return res
 
-# 机器学习方法类
-class MachineLearning:
-    def __init__(self, method):
-        self.method = method
 
-    def apply_method(self, data):
-        print("Applying machine learning method:", self.method)
-        # 实际的机器学习方法操作
-        # ...
-        return self.method + " result"
-
-# 验证指标类
-class PerformanceMetric:
-    def __init__(self, metric):
-        self.metric = metric
-
-    def calculate_metric(self, data):
-        print("Calculating performance metric:", self.metric)
-        # 实际的验证指标操作
-        # ...
-        return self.metric + " result"
-
-# 类工厂
 class Factory:
-    @staticmethod
-    def create_ml_object(method):
-        return MachineLearning(method)
+    def __init__(self, models=None, metrics=None):
+        self.models = models or []
+        self.metrics = metrics or []
 
-    @staticmethod
-    def create_metric_object(metric):
-        return PerformanceMetric(metric)
+    def create_data_sampler(self):
+        print("机器学习方法模型:")
+        for model in self.models:
+            # print(f"  - {model}")
+            if model == 'SVM':
+                print('执行了SVM操作...')
+            elif model == 'RF':
+                print('执行了RF操作...')
+            elif model == 'CNN':
+                print('执行了CNN操作...')
+            elif model == 'RNN':
+                print('执行了RNN操作...')
+
+        print("\n精度指标操作:")
+        for metric in self.metrics:
+            # print(f"  - {metric}")
+            if metric == 'ACC':
+                print('执行了ACC操作...')
+            elif metric == 'MCC':
+                print('执行了MCC操作...')
+            elif metric == 'F1':
+                print('执行了F1操作...')
+            elif metric == 'RECALL':
+                print('执行了RECALL操作...')
+
+        return DataSampler()
+
 
 # 调用示例
-data = DataGenerator.generate(int=5, float=3, str=4)
+def main():
+    models = ["SVM", "RF", "CNN", "RNN"]
+    metrics = ["ACC", "MCC", "F1", "RECALL"]
 
-ml_obj = Factory.create_ml_object("SVM")
-svm_result = ml_obj.apply_method(data)
-print(svm_result)
+    factory = Factory(models=models, metrics=metrics)
+    data_sampler = factory.create_data_sampler()
+    results = data_sampler.dataSampling(int=5, float=4, str=3)
+    print(results)
 
-metric_obj = Factory.create_metric_object("ACC")
-acc_result = metric_obj.calculate_metric(data)
-print(acc_result)
+
+if __name__ == '__main__':
+    main()
+

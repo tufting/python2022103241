@@ -1,5 +1,4 @@
 import random
-from functools import wraps
 
 """
 采用修饰器技术对作业1随机数据结构生成函数进行修饰，实现所有生成随机数的四种机器学习方法（SVM,RF,CNN,RNN）操作，
@@ -10,47 +9,51 @@ from functools import wraps
 """
 
 
-def ml_operation(*args):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            for op in args:
-                if op == 'SVM':
-                    print('SVM operation')
-                elif op == 'RF':
-                    print('RF operation')
-                elif op == 'CNN':
-                    print('CNN operation')
-                elif op == 'RNN':
-                    print('RNN operation')
+# 机器学习方法修饰器
+def ml_decorator(*models):
+    def outer_wrapper(func):
+        def inner_wrapper(**kwargs):
+            print('机器学习方法模型:')
+            for model in models:
+                # print(f'执行了{model}操作...')
+                if model == 'SVM':
+                    print('执行了SVM操作...')
+                elif model == 'RF':
+                    print('执行了RF操作...')
+                elif model == 'CNN':
+                    print('执行了CNN操作...')
+                elif model == 'RNN':
+                    print('执行了RNN操作...')
+            result = func(**kwargs)
             return result
-        return wrapper
-    return decorator
+        return inner_wrapper
+    return outer_wrapper
 
 
-def accuracy_operation(*args):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            for op in args:
-                if op == 'ACC':
-                    print('ACC operation')
-                elif op == 'MCC':
-                    print('MCC operation')
-                elif op == 'F1':
-                    print('F1 operation')
-                elif op == 'RECALL':
-                    print('RECALL operation')
+# 精度指标修饰器
+def metrics_decorator(*metrics):
+    def outer_wrapper(func):
+        def inner_wrapper(**kwargs):
+            print('\n精度指标操作:')
+            for metric in metrics:
+                # print(f'执行了{metric}操作...')
+                if metric == 'ACC':
+                    print('执行了ACC操作...')
+                elif metric == 'MCC':
+                    print('执行了MCC操作...')
+                elif metric == 'F1':
+                    print('执行了F1操作...')
+                elif metric == 'RECALL':
+                    print('执行了RECALL操作...')
+            result = func(**kwargs)
             return result
-        return wrapper
-    return decorator
+        return inner_wrapper
+    return outer_wrapper
 
 
 # 随机数据结构生成函数
-@ml_operation('SVM', 'RF')
-@accuracy_operation('ACC', 'F1')
+@ml_decorator('SVM', 'RF', 'CNN', 'RNN')
+@metrics_decorator('ACC', 'MCC', 'F1', 'RECALL')
 def dataSampling(**kwargs):
     res = []
     for data_type, data_len in kwargs.items():
@@ -59,10 +62,18 @@ def dataSampling(**kwargs):
         elif data_type == "float":
             res.extend([round(random.uniform(0, 100), 3) for _ in range(data_len)])
         elif data_type == "str":
-            res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=7)) for _ in range(data_len)])
+            res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(5, 10))) for _ in range(data_len)])
+        else:
+            print(f'unsupported data type: {data_type}')
     return res
 
 
 # 调用示例
-results = dataSampling(int=5, float=4, str=3)
-print(results)
+def main():
+    results = dataSampling(int=5, float=4, str=3)
+    print(results)
+
+
+if __name__ == '__main__':
+    main()
+

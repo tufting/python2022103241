@@ -15,10 +15,18 @@ def dataSampling(**kwargs):
         elif data_type == "float":
             res.extend([round(random.uniform(0, 100), 3) for _ in range(data_len)])
         elif data_type == "str":
-            res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=7)) for _ in range(data_len)])
+            res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(5, 10))) for _ in range(data_len)])
+        else:
+            print(f'unsupported data type: {data_type}')
     return res
 
 
-results = dataSampling(int=5, float=4, str=3)
-print(results)
+# 调用示例
+def main():
+    results = dataSampling(int=5, float=4, str=3)
+    print(results)
+
+
+if __name__ == '__main__':
+    main()
 
