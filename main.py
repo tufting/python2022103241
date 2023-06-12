@@ -24,6 +24,7 @@ def main():
             break
         else:
             print("输入无效，请重新输入！")
+        print("--------------------------")
 
 
 if __name__ == '__main__':
