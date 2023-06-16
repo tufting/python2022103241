@@ -7,6 +7,8 @@ import random
 3. 其中随机数涵盖int，float和str三种类型。
 """
 
+
+# 随机数据结构生成函数
 def dataSampling(**kwargs):
     res = []
     for data_type, data_len in kwargs.items():
