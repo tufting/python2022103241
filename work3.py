@@ -8,19 +8,52 @@ class DataSampler:
     def __init__(self):
         pass
 
-    def dataSampling(self, **kwargs):
-        res = []
-        for data_type, data_len in kwargs.items():
-            if data_type == "int":
-                res.extend(random.sample(range(1, 100), data_len))
-            elif data_type == "float":
-                res.extend([round(random.uniform(0, 100), 3) for _ in range(data_len)])
-            elif data_type == "str":
-                res.extend([''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(5, 10))) for _ in
-                            range(data_len)])
-            else:
-                print(f'unsupported data type: {data_type}')
+    def reshape(self, res, new_shape):
+        new_len = len(res)
+
+        # 每次拿最后n个元素组成一个列表
+        for n in new_shape[::-1]:
+            # print("----------")
+            lst = []
+            for _ in range(new_len // n):  # 拿几次
+                tmp = res[-n:]  # 切片，取最后n个元素
+                # print("tmp:", tmp)
+                lst.insert(0, tmp)  # 头插
+                res = res[:-n]  # 剩下的切片重新赋值
+
+            # print("lst:", lst)
+            res = lst
+            new_len //= n
+
         return res
+
+
+    def dataSampling(self, **kwargs):
+        new_shape, type1 = kwargs.get('shape'), kwargs.get('type')
+        print('我想要一个{}维度的随机数据，其中每个元素的类型是{}'.format(new_shape, type1))
+
+        # 计算列表长度，即new_shape的每一个元素乘起来
+        data_len = 1
+        for _ in new_shape:
+            data_len *= _
+
+        # 根据type生成数据
+        res = []
+        for _ in range(data_len):
+            tmp = []
+            for data_type in type1:
+                if data_type == int:
+                    tmp.append(random.randint(1, 100))
+                elif data_type == float:
+                    tmp.append(round(random.uniform(0, 100), 3))
+                elif data_type == str:
+                    tmp.append(''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=random.randint(5, 10))))
+                else:
+                    print(f'unsupported data type: {data_type}')
+            res.append(tmp)
+
+        print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
+        return self.reshape(res, new_shape)
 
 
 class Factory:
@@ -63,7 +96,7 @@ def main():
 
     factory = Factory(models=models, metrics=metrics)
     data_sampler = factory.create_data_sampler()
-    results = data_sampler.dataSampling(int=5, float=4, str=3)
+    results = data_sampler.dataSampling(shape=(3, 2, 2), type=(int, str, float, int))
     print(results)
 
 
