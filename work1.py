@@ -33,12 +33,15 @@ def dataSampling(**kwargs):
                 print(f'unsupported data type: {data_type}')
         res.append(tmp)
 
-    print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
+    # print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
     return reshape(res, new_shape)
 
 
 def reshape(res, new_shape):
     new_len = len(res)
+
+    if (len(new_shape) == 1):
+        return res
 
     # 每次拿最后n个元素组成一个列表
     for n in new_shape[::-1]:

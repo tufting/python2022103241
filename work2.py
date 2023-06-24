@@ -1,4 +1,15 @@
+import math
 import random
+import matplotlib.pyplot as plt
+from sklearn import svm
+from sklearn.datasets import make_blobs
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
+import numpy as np
+import torch
+
 
 """
 采用修饰器技术对作业1随机数据结构生成函数进行修饰，实现所有生成随机数的四种机器学习方法（SVM,RF,CNN,RNN）操作，
@@ -10,33 +21,45 @@ import random
 
 
 # 机器学习方法修饰器
-def ml_decorator(*models):
+def ml_decorator(*args):
     def outer_wrapper(func):
         def inner_wrapper(**kwargs):
-            print('机器学习方法模型:')
-            for model in models:
-                # print(f'执行了{model}操作...')
-                if model == 'SVM':
-                    print('执行了SVM操作...')
-                elif model == 'RF':
-                    print('执行了RF操作...')
+            global pred_y
+            # 获取数据和特征数
+            data = list(kwargs.get('data'))
+            feature = kwargs.get('feature')
+
+            for model in args:
+                print(f'正在执行{model}操作...')
+                if model == 'SVM' or model == 'RF':
+                    # 将数据变成每行一个sample的形式，方便训练和验证
+                    X = flatten(data)
+                    X = np.array(X).reshape(len(X) // feature, feature)
+                    print(f'每一个sample如下：{X}')
+                    X = onehot(X)
+                    # print(f'onehot之后的sample={X}')
+
+                    slicing = int(len(X) * 0.7)  # 七成用作训练集
+
+                    clf = func(data=X[0: slicing], feature=feature)
+                    pred_y = clf.predict(X[slicing:])
+                    print(f'{model}方法预测的验证集标签：{pred_y}')
                 elif model == 'CNN':
                     print('执行了CNN操作...')
                 elif model == 'RNN':
                     print('执行了RNN操作...')
-            result = func(**kwargs)
-            return result
+                print(f'{model}执行完毕...\n')
+            return pred_y
         return inner_wrapper
     return outer_wrapper
 
 
 # 精度指标修饰器
-def metrics_decorator(*metrics):
+def metrics_decorator(*args):
     def outer_wrapper(func):
         def inner_wrapper(**kwargs):
-            print('\n精度指标操作:')
-            for metric in metrics:
-                # print(f'执行了{metric}操作...')
+            for metric in args:
+                print(f'执行了{metric}操作...')
                 if metric == 'ACC':
                     print('执行了ACC操作...')
                 elif metric == 'MCC':
@@ -52,8 +75,6 @@ def metrics_decorator(*metrics):
 
 
 # 随机数据结构生成函数
-@ml_decorator('SVM', 'RF', 'CNN', 'RNN')
-@metrics_decorator('ACC', 'MCC', 'F1', 'RECALL')
 def dataSampling(**kwargs):
     new_shape, type1 = kwargs.get('shape'), kwargs.get('type')
     print('我想要一个{}维度的随机数据，其中每个元素的类型是{}'.format(new_shape, type1))
@@ -78,8 +99,8 @@ def dataSampling(**kwargs):
                 print(f'unsupported data type: {data_type}')
         res.append(tmp)
 
-    print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
-    return reshape(res, new_shape)
+    # print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
+    return reshape(res, new_shape), len(type1)
 
 
 def reshape(res, new_shape):
@@ -102,10 +123,152 @@ def reshape(res, new_shape):
     return res
 
 
+def flatten(lst):
+    flat_list = []
+    for item in lst:
+        if isinstance(item, list):
+            flat_list.extend(flatten(item))
+        else:
+            flat_list.append(item)
+    return flat_list
+
+
+def onehot(data):
+    encoder = OneHotEncoder()
+    data = encoder.fit_transform(data).toarray()
+    return data
+
+
+# 生成样本真实标签的方法
+def get_labels(data, feature):
+    X = flatten(data)
+    X = np.array(X).reshape(len(X) // feature, feature)
+    # print("get_labels的data=", X)
+
+    # 找到首个不是str类型元素的索引
+    ind = -1
+    for i in range(feature):
+        if not isinstance(X[i], str):
+            ind = i
+            break
+
+    # 下一行解释：如果都是str类型元素，随机生成标签
+    Y = [random.randint(0, 1) for _ in range(len(X))]
+    sum = 0
+    if ind != -1:
+        for i in range(len(X)):
+            sum += int(X[i][ind])
+        ave = sum / len(X)
+        for i in range(len(X)):
+            Y[i] = 1 if int(X[i][ind]) > ave else 0
+
+    return Y[int(len(Y) * 0.7):]
+
+
+@ml_decorator('SVM')
+def svm_method(**kwargs):
+    X = kwargs.get('data')
+    # print(X)
+
+    # 假设标签为二分类问题，0和1代表两个类别
+    y = [random.randint(0, 1) for _ in range(len(X))]
+    # print("y = ", y)
+
+    # 创建SVM分类器对象
+    clf = svm.SVC()
+    clf.fit(X, y)
+    return clf
+
+
+@ml_decorator('RF')
+def rf_method(**kwargs):
+    X = kwargs.get('data')
+
+    # 假设标签为二分类问题，0和1代表两个类别
+    y = [random.randint(0, 1) for _ in range(len(X))]
+
+    # 创建随机森林分类器对象
+    clf = RandomForestClassifier()
+    clf.fit(X, y)  # 使用训练数据进行模型训练
+    return clf
+
+
+@metrics_decorator('ACC')
+def acc_metric(**kwargs):
+    y_true = kwargs.get('y_true')
+    y_pred = kwargs.get('y_pred')
+    accuracy = (y_true == y_pred).mean()
+    return accuracy
+
+
+@metrics_decorator('MCC')
+def mcc_metric(**kwargs):
+    y_true = kwargs.get('y_true')
+    y_pred = kwargs.get('y_pred')
+    # y_pred = list(y_pred)
+    # print(f'MCC y_true={y_true}')
+    # print(f'MCC y_pred={y_pred}')
+
+    tp = sum(1 for x, y in zip(y_true, y_pred) if x == y == 1)
+    tn = sum(1 for x, y in zip(y_true, y_pred) if x == y == 0)
+    fp = sum(1 for x, y in zip(y_true, y_pred) if x == 0 and y == 1)
+    fn = sum(1 for x, y in zip(y_true, y_pred) if x == 1 and y == 0)
+
+    numerator = tp * tn - fp * fn
+    denominator = ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5
+    if denominator == 0:
+        return 0
+    else:
+        return numerator / denominator
+
+
+@metrics_decorator('F1')
+def f1_metric(**kwargs):
+    y_true = kwargs.get('y_true')
+    y_pred = kwargs.get('y_pred')
+
+    tp = sum(1 for x, y in zip(y_true, y_pred) if x == y == 1)
+    fp = sum(1 for x, y in zip(y_true, y_pred) if x == 0 and y == 1)
+    fn = sum(1 for x, y in zip(y_true, y_pred) if x == 1 and y == 0)
+
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1 = 2 * (precision * recall) / (precision + recall)
+    return f1
+
+
+@metrics_decorator('RECALL')
+def recall_metric(**kwargs):
+    y_true = kwargs.get('y_true')
+    y_pred = kwargs.get('y_pred')
+
+    tp = sum(1 for x, y in zip(y_true, y_pred) if x == y == 1)
+    fn = sum(1 for x, y in zip(y_true, y_pred) if x == 1 and y == 0)
+
+    recall = tp / (tp + fn)
+    return recall
+
+
 # 调用示例
 def main():
-    results = dataSampling(shape=(3, 2, 2), type=(int, str, float, int))
-    print(results)
+    data, feature = dataSampling(shape=(5, 2, 2), type=(int, str, float))
+    print(f"随机生成的数据如下：\n{data}\n")
+
+    # 调用机器学习方法
+    # y_pred = svm_method(data=data, feature=feature)
+    y_pred = rf_method(data=data, feature=feature)
+    print(f'通过机器学习方法得到的预测标签={y_pred}')
+
+    # 根据我设定的规则，为验证集设置标签
+    y_true = get_labels(data, feature)
+    print(f'真实标签={y_true}')
+
+    # 调用精度方法
+    # acc = acc_metric(y_true=y_true, y_pred=y_pred)
+    # acc = mcc_metric(y_true=y_true, y_pred=y_pred)
+    # acc = f1_metric(y_true=y_true, y_pred=y_pred)
+    acc = recall_metric(y_true=y_true, y_pred=y_pred)
+    print(f'精度={acc}')
 
 
 if __name__ == '__main__':
