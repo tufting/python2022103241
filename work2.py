@@ -1,14 +1,8 @@
-import math
 import random
-import matplotlib.pyplot as plt
 from sklearn import svm
-from sklearn.datasets import make_blobs
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 import numpy as np
-import torch
 
 
 """
@@ -44,10 +38,11 @@ def ml_decorator(*args):
                     clf = func(data=X[0: slicing], feature=feature)
                     pred_y = clf.predict(X[slicing:])
                     print(f'{model}方法预测的验证集标签：{pred_y}')
-                elif model == 'CNN':
-                    print('执行了CNN操作...')
-                elif model == 'RNN':
-                    print('执行了RNN操作...')
+                elif model == 'CNN' or model == 'RNN':
+                    func(**kwargs)
+                    samples = len(flatten(data)) // feature
+                    slicing = int(samples * 0.7)
+                    return [random.randint(0, 1) for _ in range(samples - slicing)]
                 print(f'{model}执行完毕...\n')
             return pred_y
         return inner_wrapper
@@ -59,7 +54,6 @@ def metrics_decorator(*args):
     def outer_wrapper(func):
         def inner_wrapper(**kwargs):
             for metric in args:
-                print(f'执行了{metric}操作...')
                 if metric == 'ACC':
                     print('执行了ACC操作...')
                 elif metric == 'MCC':
@@ -193,6 +187,16 @@ def rf_method(**kwargs):
     return clf
 
 
+@ml_decorator('CNN')
+def cnn_method(**kwargs):
+    print("执行了CNN...")
+
+
+@ml_decorator('RNN')
+def rnn_method(**kwargs):
+    print("执行了RNN...")
+
+
 @metrics_decorator('ACC')
 def acc_metric(**kwargs):
     y_true = kwargs.get('y_true')
@@ -251,12 +255,15 @@ def recall_metric(**kwargs):
 
 # 调用示例
 def main():
-    data, feature = dataSampling(shape=(5, 2, 2), type=(int, str, float))
+    data, feature = dataSampling(shape=(4, 2, 2), type=(int, str, float))
     print(f"随机生成的数据如下：\n{data}\n")
 
     # 调用机器学习方法
     # y_pred = svm_method(data=data, feature=feature)
     y_pred = rf_method(data=data, feature=feature)
+    # y_pred = rnn_method(data=data, feature=feature)
+    # y_pred = cnn_method(data=data, feature=feature)
+
     print(f'通过机器学习方法得到的预测标签={y_pred}')
 
     # 根据我设定的规则，为验证集设置标签
@@ -264,10 +271,10 @@ def main():
     print(f'真实标签={y_true}')
 
     # 调用精度方法
-    # acc = acc_metric(y_true=y_true, y_pred=y_pred)
+    acc = acc_metric(y_true=y_true, y_pred=y_pred)
     # acc = mcc_metric(y_true=y_true, y_pred=y_pred)
     # acc = f1_metric(y_true=y_true, y_pred=y_pred)
-    acc = recall_metric(y_true=y_true, y_pred=y_pred)
+    # acc = recall_metric(y_true=y_true, y_pred=y_pred)
     print(f'精度={acc}')
 
 

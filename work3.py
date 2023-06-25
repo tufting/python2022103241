@@ -27,7 +27,6 @@ class DataSampler:
 
         return res
 
-
     def dataSampling(self, **kwargs):
         new_shape, type1 = kwargs.get('shape'), kwargs.get('type')
         print('我想要一个{}维度的随机数据，其中每个元素的类型是{}'.format(new_shape, type1))
@@ -52,7 +51,7 @@ class DataSampler:
                     print(f'unsupported data type: {data_type}')
             res.append(tmp)
 
-        print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
+        # print('当前获取的随机列表为{}, 我想要的维度是{}.'.format(res, new_shape))
         return self.reshape(res, new_shape)
 
 
@@ -64,7 +63,6 @@ class Factory:
     def create_data_sampler(self):
         print("机器学习方法模型:")
         for model in self.models:
-            # print(f"  - {model}")
             if model == 'SVM':
                 print('执行了SVM操作...')
             elif model == 'RF':
@@ -76,7 +74,6 @@ class Factory:
 
         print("\n精度指标操作:")
         for metric in self.metrics:
-            # print(f"  - {metric}")
             if metric == 'ACC':
                 print('执行了ACC操作...')
             elif metric == 'MCC':
@@ -97,7 +94,7 @@ def main():
     factory = Factory(models=models, metrics=metrics)
     data_sampler = factory.create_data_sampler()
     results = data_sampler.dataSampling(shape=(3, 2, 2), type=(int, str, float, int))
-    print(results)
+    print(f'result={results}')
 
 
 if __name__ == '__main__':
